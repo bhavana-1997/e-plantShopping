@@ -14,16 +14,29 @@ export const CartSlice = createSlice({
       } else {
         state.items.push({ name, image, cost, quantity: 1 });
       }
+      state.totalQuantity += 1;
     },
     removeItem: (state, action) => {
-      state.items = state.items.filter((item) => item.name !== action.payload);
+      const itemIndex = state.items.findIndex(
+        (item) => item.name === action.payload
+      );
+      if (itemIndex !== -1) {
+        state.totalQuantity -= state.items[itemIndex].quantity; // ✅ Subtract quantity before removing
+        state.items.splice(itemIndex, 1);
+      }
     },
     updateQuantity: (state, action) => {
       const { name, quantity } = action.payload;
-      const itemToUpdate = state.items.find((item) => item.name === name);
-      if (itemToUpdate) {
-        itemToUpdate.quantity = quantity;
+      const item = state.items.find((item) => item.name === name);
+
+      if (item) {
+        state.totalQuantity += quantity - item.quantity; // ✅ Adjust total quantity
+        item.quantity = quantity;
       }
+    },
+    clearCart: (state) => {
+      state.items = [];
+      state.totalQuantity = 0; // ✅ Reset total quantity
     },
   },
 });
