@@ -3,7 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 export const CartSlice = createSlice({
   name: "cart",
   initialState: {
-    items: [], // Initialize items as an empty array
+    items: [], // Ostoskorin tuotteet
+    totalQuantity: 0, // Uusi tila, joka seuraa tuotteiden kokonaismäärää
   },
   reducers: {
     addItem: (state, action) => {
@@ -14,29 +15,26 @@ export const CartSlice = createSlice({
       } else {
         state.items.push({ name, image, cost, quantity: 1 });
       }
-      state.totalQuantity += 1;
+      state.totalQuantity++; // Päivitä kokonaismäärä
     },
     removeItem: (state, action) => {
-      const itemIndex = state.items.findIndex(
+      const itemToRemove = state.items.find(
         (item) => item.name === action.payload
       );
-      if (itemIndex !== -1) {
-        state.totalQuantity -= state.items[itemIndex].quantity; // ✅ Subtract quantity before removing
-        state.items.splice(itemIndex, 1);
+      if (itemToRemove) {
+        state.totalQuantity -= itemToRemove.quantity; // Vähennä tuotteen määrä kokonaismäärästä
+        state.items = state.items.filter(
+          (item) => item.name !== action.payload
+        );
       }
     },
     updateQuantity: (state, action) => {
       const { name, quantity } = action.payload;
-      const item = state.items.find((item) => item.name === name);
-
-      if (item) {
-        state.totalQuantity += quantity - item.quantity; // ✅ Adjust total quantity
-        item.quantity = quantity;
+      const itemToUpdate = state.items.find((item) => item.name === name);
+      if (itemToUpdate) {
+        state.totalQuantity += quantity - itemToUpdate.quantity; // Päivitä kokonaismäärä
+        itemToUpdate.quantity = quantity;
       }
-    },
-    clearCart: (state) => {
-      state.items = [];
-      state.totalQuantity = 0; // ✅ Reset total quantity
     },
   },
 });
