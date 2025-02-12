@@ -16,11 +16,6 @@ const Navbar = () => {
         <li>
           <Link to="/shop">Shop</Link>
         </li>
-        <li>
-          <Link to="/cart" className="cart-icon">
-            🛒 <span className="cart-counter">{totalQuantity}</span>
-          </Link>
-        </li>
       </ul>
     </nav>
   );

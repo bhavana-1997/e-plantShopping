@@ -1,48 +1,41 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeItem, updateQuantity } from "./CartSlice";
 import "./CartItem.css";
 
 const CartItem = ({ onContinueShopping }) => {
   const cart = useSelector((state) => state.cart.items);
-
   const dispatch = useDispatch();
 
-  // ✅ Memoized total amount calculation
-  const totalAmount = useMemo(() => {
-    return cart.reduce(
-      (acc, item) => {
-        const cost = parseFloat(item.cost);
-        const quantity = Number(item.quantity) || 0;
+  // Laske tuotteiden kokonaismäärä ostoskorissa
+  const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0);
 
-        if (isNaN(cost) || isNaN(quantity)) {
-          console.warn(`Invalid cost/quantity detected for item:`, item);
-          return acc; // Skip invalid items
-        }
+  // Laske kokonaishinta
+  const calculateTotalAmount = () => {
+    return cart
+      .reduce((total, item) => {
+        const cost = parseFloat(item.cost.replace("$", "").trim());
+        if (isNaN(cost)) return total;
+        return total + item.quantity * cost;
+      }, 0)
+      .toFixed(2);
+  };
 
-        acc.totalAmount += cost * quantity;
-        acc.totalQuantity += quantity;
-        return acc;
-      },
-      { totalAmount: 0, totalQuantity: 0 }
-    );
-  }, [cart]);
+  const calculateTotalCost = (item) => {
+    const cost = parseFloat(item.cost.replace("$", "").trim());
+    if (isNaN(cost)) return "0.00";
+    return (item.quantity * cost).toFixed(2);
+  };
 
-  console.log("Cart contents:", cart); // Debugging
-
-  const totalQuantity = useMemo(() => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  }, [cart]);
+  const handleContinueShopping = (e) => {
+    e.preventDefault();
+    if (onContinueShopping) {
+      onContinueShopping();
+    }
+  };
 
   const handleIncrement = (item) => {
     dispatch(updateQuantity({ name: item.name, quantity: item.quantity + 1 }));
-  };
-  const handleContinueShopping = () => {
-    if (onContinueShopping) {
-      onContinueShopping();
-    } else {
-      alert("Functionality to be added for future reference");
-    }
   };
 
   const handleDecrement = (item) => {
@@ -50,8 +43,6 @@ const CartItem = ({ onContinueShopping }) => {
       dispatch(
         updateQuantity({ name: item.name, quantity: item.quantity - 1 })
       );
-    } else {
-      dispatch(removeItem(item.name));
     }
   };
 
@@ -62,34 +53,35 @@ const CartItem = ({ onContinueShopping }) => {
   return (
     <div className="cart-container">
       <h2 style={{ color: "black" }}>
-        Total Items: {totalQuantity || 0} | Total Amount: $
-        {totalAmount > 0 ? totalAmount.toFixed(2) : "0.00"}
+        Total Cart Amount: ${calculateTotalAmount()}
       </h2>
-
-      {cart.length > 0 ? (
-        cart.map((item) => (
+      <h3 style={{ color: "black" }}>Total Items in Cart: {totalQuantity}</h3>
+      <div>
+        {cart.map((item) => (
           <div className="cart-item" key={item.name}>
             <img className="cart-item-image" src={item.image} alt={item.name} />
             <div className="cart-item-details">
               <div className="cart-item-name">{item.name}</div>
-              <div className="cart-item-cost">${item.cost ?? 0}</div>
+              <div className="cart-item-cost">{item.cost}</div>
               <div className="cart-item-quantity">
                 <button
-                  className="cart-item-button"
+                  className="cart-item-button cart-item-button-dec"
                   onClick={() => handleDecrement(item)}
                 >
                   -
                 </button>
-                <span>{item.quantity ?? 1}</span>
+                <span className="cart-item-quantity-value">
+                  {item.quantity}
+                </span>
                 <button
-                  className="cart-item-button"
+                  className="cart-item-button cart-item-button-inc"
                   onClick={() => handleIncrement(item)}
                 >
                   +
                 </button>
               </div>
               <div className="cart-item-total">
-                Total: ${item.cost * item.quantity}
+                Total: ${calculateTotalCost(item)}
               </div>
               <button
                 className="cart-item-delete"
@@ -99,12 +91,23 @@ const CartItem = ({ onContinueShopping }) => {
               </button>
             </div>
           </div>
-        ))
-      ) : (
-        <p style={{ color: "gray", textAlign: "center" }}>
-          Your cart is empty.
-        </p>
-      )}
+        ))}
+      </div>
+      <div className="continue_shopping_btn">
+        <button
+          className="get-started-button"
+          onClick={(e) => handleContinueShopping(e)}
+        >
+          Continue Shopping
+        </button>
+        <br />
+        <button
+          className="get-started-button1"
+          onClick={() => alert("Checkout functionality will be added later.")}
+        >
+          Checkout
+        </button>
+      </div>
     </div>
   );
 };
